@@ -7,20 +7,19 @@ Usage:
   # Create test data:
   python generate_tfrecord.py --csv_input=data/test_labels.csv  --output_path=test.record  --image_dir=/data
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import absolute_import
 
-import os
 import io
+import os
+from collections import namedtuple
+
 import pandas as pd
 import tensorflow as tf
-
 from PIL import Image
-from object_detection.utils import dataset_util
-from collections import namedtuple, OrderedDict
-from absl import app
 from absl import flags
+from object_detection.utils import dataset_util
 
 flags.DEFINE_string('csv_input', '', 'Path to the CSV input')
 flags.DEFINE_string('output_path', '', 'Path to output TFRecord')
@@ -83,7 +82,7 @@ def create_tf_example(group, path):
     return tf_example
 
 
-def main(_):
+if __name__ == '__main__':
     writer = tf.io.TFRecordWriter(FLAGS.output_path)
     path = os.path.join(FLAGS.image_dir)
     examples = pd.read_csv(FLAGS.csv_input)
@@ -95,7 +94,3 @@ def main(_):
     writer.close()
     output_path = os.path.join(os.getcwd(), FLAGS.output_path)
     print('Successfully created the TFRecords: {}'.format(output_path))
-
-
-if __name__ == '__main__':
-    app.run(main)
