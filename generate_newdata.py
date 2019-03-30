@@ -45,7 +45,7 @@ def get_data(__csv_file, __images_path):
         for row in reader:
             if row[0] != "filename":
                 __inputImages.append(
-                    InputImage(__images_path + row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
+                    InputImage(os.path.join(__images_path, row[0]), row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
     return __inputImages
 
 
@@ -113,8 +113,8 @@ def make_new_data(__input_images, __path, __grid_size, __csv_filename):
     with open(os.path.join(__path, __csv_filename), 'w', newline='') as file:
         writter = csv.writer(file)
         for imageFile in __input_images:
-            print("making data from" + imageFile.filename)
-            image = cv2.imread(imageFile.filename)
+            print("making data from " + imageFile.filename)
+            image = cv2.imread(os.path.abspath(imageFile.filename))
             image, row_numbers, col_numbers = resize_image(image, __grid_size)
             images = crop_image(imageFile, image, row_numbers, col_numbers, __path)
             for hand in images:
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     new_images_path = sys.argv[3]
     # grid_size = 80
     grid_size = int(sys.argv[4])
-    csv_filename = csv_file.split('/')[-1]
+    _, csv_filename = os.path.split(csv_file)
     if not os.path.exists(new_images_path):
         os.mkdir(new_images_path)
     if not os.path.exists(os.path.join(new_images_path, "images")):
