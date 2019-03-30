@@ -181,5 +181,5 @@ venv.bak/
 
 images/*.
 images.zip
-
 train.record
+new_images/*.
