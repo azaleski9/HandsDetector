@@ -90,7 +90,8 @@ def create_tf_example(group, path):
        # 'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
        # 'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
        # 'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
-        'image/object/class/label': _int64_list_feature(classes),
+     #   'image/object/class/label': _int64_list_feature(classes),
+       'image/object/class/label': _int64_feature(1)
     }))
 
    # tf_example = tf.train.Example(features={

@@ -6,12 +6,13 @@ import tensorflow.keras
 from tensorflow.python.data.ops import dataset_ops
 
 
+#TFRecords parser
 def _parse_function(example_proto):
     features = tf.io.parse_single_example(
         example_proto,
         features={
             'image/encoded': tf.io.FixedLenFeature((), tf.string, default_value=''),
-            'image/object/class/label': tf.io.VarLenFeature(tf.int64)
+            'image/object/class/label': tf.io.FixedLenFeature((), tf.int64)
         })
     #image = tf.io.decode_raw(features['image/encoded'], tf.float32)
     image = tf.image.decode_jpeg(features['image/encoded'], channels=3)
@@ -23,12 +24,13 @@ def _parse_function(example_proto):
 IMG_SIZE = 160 # All images will be resized to 160x160
 
 
+#Reizing imgages to 160x160 pixels
 def format_example(image, label):
     image = tf.cast(image, tf.float32)
     image = (image/127.5) - 1
     image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
 
-    return image, tf.sparse.to_dense(label)
+    return image, label
 
 
 if __name__ == "__main__":
@@ -55,9 +57,9 @@ if __name__ == "__main__":
     BATCH_SIZE = 32
     SHUFFLE_BUFFER_SIZE = 1000
 
-    train_batches = train.shuffle(SHUFFLE_BUFFER_SIZE).padded_batch(BATCH_SIZE, padded_shapes=([None, None, None], [10]))
-    validation_batches = validation.padded_batch(BATCH_SIZE, padded_shapes=([None, None, None], [10]))
-    test_batches = test.padded_batch(BATCH_SIZE, padded_shapes=([None, None, None], [10]))
+    train_batches = train.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
+    validation_batches = validation.batch(BATCH_SIZE)
+    test_batches = test.batch(BATCH_SIZE)
 
     for image_batch, label_batch in train_batches.take(1):
         pass
@@ -82,9 +84,9 @@ if __name__ == "__main__":
 
 
 
-    #Own simple model - experimental
+    #Own simple model - experimental - isn't used now
     model = keras.models.Sequential()
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(160, 160, 3)))
+    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 3)))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
@@ -115,10 +117,15 @@ if __name__ == "__main__":
     steps_per_epoch = round(1000) // BATCH_SIZE
     validation_steps = 10
 
-    loss0, accuracy0 = model.evaluate(validation_batches, steps=validation_steps)
 
+    #Training
     history = model.fit(train_batches.repeat(),
                         epochs=initial_epochs,
                         steps_per_epoch=steps_per_epoch,
                         validation_data=validation_batches.repeat(),
                         validation_steps=validation_steps)
+
+
+    #Validating testing
+    loss0, accuracy0 = model.evaluate(validation_batches, steps=validation_steps)
+
