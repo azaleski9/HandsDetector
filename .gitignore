@@ -178,3 +178,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+images/*.
+images.zip
+
+train.record

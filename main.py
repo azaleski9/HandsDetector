@@ -124,3 +124,5 @@ if __name__ == "__main__":
     # Validating testing
     loss1, accuracy1 = model.evaluate(validation_batches, steps=validation_steps)
 
+
+
