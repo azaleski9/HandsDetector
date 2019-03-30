@@ -13,13 +13,13 @@ from __future__ import print_function
 
 import io
 import os
+import sys
 from collections import namedtuple
 
 import pandas as pd
 import tensorflow as tf
 from PIL import Image
 from absl import flags
-from object_detection.utils import dataset_util
 
 flags.DEFINE_string('csv_input', '', 'Path to the CSV input')
 flags.DEFINE_string('output_path', '', 'Path to output TFRecord')
@@ -39,6 +39,17 @@ def split(df, group):
     data = namedtuple('data', ['filename', 'object'])
     gb = df.groupby(group)
     return [data(filename, gb.get_group(x)) for filename, x in zip(gb.groups.keys(), gb.groups)]
+
+def _int64_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+def _bytes_feature(value):
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+def _int64_list_feature(value):
+  return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
+
 
 
 def create_tf_example(group, path):
@@ -65,24 +76,33 @@ def create_tf_example(group, path):
         classes_text.append(row['class'].encode('utf8'))
         classes.append(class_text_to_int(row['class']))
 
+    classes = [1]
+
     tf_example = tf.train.Example(features=tf.train.Features(feature={
-        'image/height': dataset_util.int64_feature(height),
-        'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(filename),
-        'image/source_id': dataset_util.bytes_feature(filename),
-        'image/encoded': dataset_util.bytes_feature(encoded_jpg),
-        'image/format': dataset_util.bytes_feature(image_format),
-        'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
-        'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
-        'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
-        'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
-        'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
-        'image/object/class/label': dataset_util.int64_list_feature(classes),
+       # 'image/height': dataset_util.int64_feature(height),
+       # 'image/width': dataset_util.int64_feature(width),
+       # 'image/filename': dataset_util.bytes_feature(filename),
+       # 'image/source_id': dataset_util.bytes_feature(filename),
+        'image/encoded': _bytes_feature(encoded_jpg),
+       # 'image/format': dataset_util.bytes_feature(image_format),
+       # 'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
+       # 'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
+       # 'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
+       # 'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
+       # 'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+        'image/object/class/label': _int64_list_feature(classes),
     }))
+
+   # tf_example = tf.train.Example(features={
+    #        'image/encoded': _bytes_feature(encoded_jpg),
+     #       'image/object/class/label': _int64_feature(classes)
+     #   })
+
     return tf_example
 
 
 if __name__ == '__main__':
+    FLAGS(sys.argv)
     writer = tf.io.TFRecordWriter(FLAGS.output_path)
     path = os.path.join(FLAGS.image_dir)
     examples = pd.read_csv(FLAGS.csv_input)
