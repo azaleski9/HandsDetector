@@ -112,8 +112,10 @@ def make_new_data(__input_images, __path, __grid_size, __csv_filename):
     __csv_filename = "new_" + __csv_filename
     with open(os.path.join(__path, __csv_filename), 'w', newline='') as file:
         writter = csv.writer(file)
+        i = 1
         for imageFile in __input_images:
-            print("making data from " + imageFile.filename)
+            print(str(i) + " / " + str(len(__input_images)))
+            i += 1
             image = cv2.imread(os.path.abspath(imageFile.filename))
             image, row_numbers, col_numbers = resize_image(image, __grid_size)
             images = crop_image(imageFile, image, row_numbers, col_numbers, __path)
