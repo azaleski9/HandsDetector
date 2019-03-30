@@ -81,7 +81,8 @@ def crop_image(__imageFile, __image, __rows, __cols, path):
             x2 = int(__image.shape[1] / __cols * (j + 1))
             x1 = int(x2 - __grid_size)
             image = __image[y1:y2, x1:x2]
-            filename = __imageFile.filename.split('/')[-1].split('.')[0] + "_" + str(i) + "_" + str(j) + ".jpg"
+            _, filename = os.path.split(__imageFile.filename)
+            filename = str(filename.split('.')[0]) + "_" + str(i) + "_" + str(j) + ".jpg"
             file_path = os.path.join(path, "images", filename)
             cv2.imwrite(file_path, image)
             # checking collision of cropped image with hand in original
