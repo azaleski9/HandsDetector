@@ -11,20 +11,19 @@ def _parse_function(example_proto):
     features = tf.io.parse_single_example(
         example_proto,
         features={
-            'image/encoded': tf.io.FixedLenFeature((), tf.string, default_value=''),
-            'image/object/class/label': tf.io.FixedLenFeature((), tf.int64)
+            'image/encoded': tf.io.FixedLenFeature([], tf.string),
+            'image/object/class/label': tf.io.FixedLenFeature([], tf.int64)
         })
     #image = tf.io.decode_raw(features['image/encoded'], tf.float32)
     image = tf.image.decode_jpeg(features['image/encoded'], channels=3)
     label = tf.cast(features['image/object/class/label'], tf.int64)
-
     return image, label
 
 
 IMG_SIZE = 160 # All images will be resized to 160x160
 
 
-#Reizing imgages to 160x160 pixels
+# Reizing imgages to 160x160 pixels
 def format_example(image, label):
     image = tf.cast(image, tf.float32)
     image = (image/127.5) - 1
@@ -37,18 +36,19 @@ if __name__ == "__main__":
 
     keras = tf.keras
 
-    options = dataset_ops.Options()
+    raw_dataset = tf.data.TFRecordDataset(["train.record"]).repeat()
+    parsed_dataset = raw_dataset.map(_parse_function)
 
-    raw_dataset = tf.data.TFRecordDataset(["train.record"])
-    parsed_dataset = raw_dataset.map(_parse_function).with_options(options)
+    all_training_elements = 4400
+    train_size = int(0.85 * all_training_elements)
+    val_size = int(0.15 * all_training_elements)
 
-    raw_dataset_test = tf.data.TFRecordDataset(["test.record"])
-    parsed_dataset_test = raw_dataset.map(_parse_function).with_options(options)
+    raw_dataset_test = tf.data.TFRecordDataset(["test.record"]).repeat()
+    parsed_dataset_test = raw_dataset.map(_parse_function)
 
     raw_test = parsed_dataset_test
-    raw_validation = parsed_dataset_test
+    raw_validation = parsed_dataset.take(val_size)
     raw_train = parsed_dataset
-
 
     train = raw_train.map(format_example)
     validation = raw_validation.map(format_example)
@@ -63,7 +63,6 @@ if __name__ == "__main__":
 
     for image_batch, label_batch in train_batches.take(1):
         pass
-
 
     IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
 
@@ -82,9 +81,7 @@ if __name__ == "__main__":
     prediction_layer = keras.layers.Dense(1)
     prediction_batch = prediction_layer(feature_batch_average)
 
-
-
-    #Own simple model - experimental - isn't used now
+    # Own simple model - experimental - isn't used now
     model = keras.models.Sequential()
     model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 3)))
     model.add(keras.layers.MaxPooling2D((2, 2)))
@@ -113,19 +110,17 @@ if __name__ == "__main__":
      #   for weight in SPLIT_WEIGHTS
     #)
 
-    initial_epochs = 10
-    steps_per_epoch = round(1000) // BATCH_SIZE
-    validation_steps = 10
+    initial_epochs = 3
+    steps_per_epoch = int(train_size/BATCH_SIZE)
+    validation_steps = int(val_size/BATCH_SIZE)
 
-
-    #Training
+    # Training
     history = model.fit(train_batches.repeat(),
                         epochs=initial_epochs,
                         steps_per_epoch=steps_per_epoch,
                         validation_data=validation_batches.repeat(),
                         validation_steps=validation_steps)
 
-
-    #Validating testing
-    loss0, accuracy0 = model.evaluate(validation_batches, steps=validation_steps)
+    # Validating testing
+    loss1, accuracy1 = model.evaluate(validation_batches, steps=validation_steps)
 
