@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import tensorflow as tf
+import os
 
 
 #TFRecords parser
@@ -36,7 +37,8 @@ if __name__ == "__main__":
     raw_dataset = tf.data.TFRecordDataset(["train.record"]).repeat()
     parsed_dataset = raw_dataset.map(_parse_function)
 
-    all_training_elements = 4400
+    all_training_elements = 182313
+
     train_size = int(0.85 * all_training_elements)
     val_size = int(0.15 * all_training_elements)
 
@@ -51,7 +53,7 @@ if __name__ == "__main__":
     validation = raw_validation.map(format_example)
     test = raw_test.map(format_example)
 
-    BATCH_SIZE = 32
+    BATCH_SIZE = 64
     SHUFFLE_BUFFER_SIZE = 1000
 
     train_batches = train.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
@@ -111,12 +113,21 @@ if __name__ == "__main__":
     steps_per_epoch = int(train_size/BATCH_SIZE)
     validation_steps = int(val_size/BATCH_SIZE)
 
+    checkpoint_path = "training_1/cp.ckpt"
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+
+    # Create checkpoint callback
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
+                                                     save_weights_only=True,
+                                                     verbose=1)
     # Training
     history = model.fit(train_batches.repeat(),
                         epochs=initial_epochs,
                         steps_per_epoch=steps_per_epoch,
                         validation_data=validation_batches.repeat(),
-                        validation_steps=validation_steps)
+                        validation_steps=validation_steps, callbacks=[cp_callback])
+
+    model.save('hand_model.h5')
 
     # Validating testing
     loss1, accuracy1 = model.evaluate(validation_batches, steps=validation_steps)
