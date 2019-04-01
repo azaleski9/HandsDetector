@@ -31,8 +31,10 @@ FLAGS = flags.FLAGS
 def class_text_to_int(row_label):
     if row_label == 'hand':
         return 1
+    elif row_label == 'background':
+        return 0
     else:
-        None
+        return None
 
 
 def split(df, group):
@@ -65,30 +67,17 @@ def create_tf_example(group, path):
     xmaxs = []
     ymins = []
     ymaxs = []
-    classes_text = []
-    classes = []
+    classes_text = ""
 
+    for index, row in group.object.iterrows():
+        classes_text = row['class']
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
-       # 'image/height': dataset_util.int64_feature(height),
-       # 'image/width': dataset_util.int64_feature(width),
-       # 'image/filename': dataset_util.bytes_feature(filename),
-       # 'image/source_id': dataset_util.bytes_feature(filename),
        'image/encoded': _bytes_feature(encoded_jpg),
-       # 'image/format': dataset_util.bytes_feature(image_format),
-       # 'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
-       # 'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
-       # 'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
-       # 'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
-       # 'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
-     #   'image/object/class/label': _int64_list_feature(classes),
-       'image/object/class/label': _int64_feature(1)
+       'image/object/class/label': _int64_feature(class_text_to_int(classes_text))
     }))
 
-   # tf_example = tf.train.Example(features={
-    #        'image/encoded': _bytes_feature(encoded_jpg),
-     #       'image/object/class/label': _int64_feature(classes)
-     #   })
+    print('Successfully written: {}'.format(group.filename))
 
     return tf_example
 
