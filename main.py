@@ -1,9 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-import matplotlib.pyplot as plt
 import tensorflow as tf
-import tensorflow.keras
-from tensorflow.python.data.ops import dataset_ops
 
 
 #TFRecords parser
