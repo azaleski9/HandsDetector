@@ -73,6 +73,7 @@ def check_collistion(rect1, rect2):
 def crop_image(__imageFile, __image, __rows, __cols, path):
     images = []
     __grid_size = __image.shape[0] / __rows
+    collider_counter = 0
     grid_area = __grid_size ** 2
     for i in range(__rows):
         y2 = int(__image.shape[0] / __rows * (i + 1))
@@ -82,13 +83,14 @@ def crop_image(__imageFile, __image, __rows, __cols, path):
             x1 = int(x2 - __grid_size)
             image = __image[y1:y2, x1:x2]
             _, filename = os.path.split(__imageFile.filename)
-            filename = str(filename.split('.')[0]) + "_" + str(i) + "_" + str(j) + ".jpg"
+            filename = str(filename.split('.')[0]) + "_" + str(i) + "_" + str(j) + "_" + str(__imageFile.xmin) + ".jpg"
             file_path = os.path.join(path, "images", filename)
-            cv2.imwrite(file_path, image)
+
             # checking collision of cropped image with hand in original
             rect1 = Rect(x1, y1, (x2 - x1), (y2 - y1))
             rect2 = Rect(__imageFile.xmin, __imageFile.ymin, (__imageFile.xmax - __imageFile.xmin),
                          (__imageFile.ymax - __imageFile.ymin))
+
             if check_collistion(rect1, rect2):
                 if rect1.x < rect2.x:
                     collision_width = (rect1.x + rect1.width) - rect2.x
@@ -102,10 +104,18 @@ def crop_image(__imageFile, __image, __rows, __cols, path):
                 percentage_of_collision = collistion_area / grid_area
                 if percentage_of_collision > 0.5:
                     images.append(OutputImage(filename, "hand"))
+                    cv2.imwrite(file_path, image)
+                    collider_counter += 1
                 else:
-                    images.append(OutputImage(filename, "background"))
+                    if collider_counter > 0:
+                        images.append(OutputImage(filename, "background"))
+                        cv2.imwrite(file_path, image)
+                        collider_counter -= 1
             else:
-                images.append(OutputImage(filename, "background"))
+                if collider_counter > 0:
+                    images.append(OutputImage(filename, "background"))
+                    cv2.imwrite(file_path, image)
+                    collider_counter -= 1
     return images
 
 
@@ -120,10 +130,10 @@ def make_new_data(__input_images, __path, __grid_size, __csv_filename):
             image = cv2.imread(os.path.abspath(imageFile.filename))
             image, row_numbers, col_numbers = resize_image(image, __grid_size)
             images = crop_image(imageFile, image, row_numbers, col_numbers, __path)
-            for hand in images:
-                if hand.class_name == "hand":
-                    temp2 = cv2.imread(os.path.join(__path, "images", hand.filename))
-                    cv2.imwrite(os.path.join(__path, "hands", hand.filename), temp2)
+           # for hand in images:
+            #    if hand.class_name == "hand":
+             #       temp2 = cv2.imread(os.path.join(__path, "images", hand.filename))
+              #      cv2.imwrite(os.path.join(__path, "hands", hand.filename), temp2)
             for img in images:
                 writter.writerow(list(img))
         file.close()
