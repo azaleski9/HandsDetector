@@ -42,6 +42,7 @@ def split(df, group):
     gb = df.groupby(group)
     return [data(filename, gb.get_group(x)) for filename, x in zip(gb.groups.keys(), gb.groups)]
 
+
 def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
@@ -49,9 +50,9 @@ def _int64_feature(value):
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
-def _int64_list_feature(value):
-  return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
+def _int64_list_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
 
 def create_tf_example(group, path):
@@ -73,8 +74,8 @@ def create_tf_example(group, path):
         classes_text = row['class']
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
-       'image/encoded': _bytes_feature(encoded_jpg),
-       'image/object/class/label': _int64_feature(class_text_to_int(classes_text))
+        'image/encoded': _bytes_feature(encoded_jpg),
+        'image/object/class/label': _int64_feature(class_text_to_int(classes_text))
     }))
 
     print('Successfully written: {}'.format(group.filename))

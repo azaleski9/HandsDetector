@@ -182,4 +182,8 @@ venv.bak/
 images/*.
 images.zip
 train.record
+test.record
 new_images/*.
+log/*.
+.idea/*.
+*.h5
