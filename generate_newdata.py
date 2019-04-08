@@ -1,4 +1,4 @@
-# Example usage python generate_newdata.py images/test_labels.csv images/test/ new_images 80
+# Example usage python generate_newdata.py images/test_labels.csv images/test/ new_images 96
 
 import csv
 import os
@@ -141,13 +141,9 @@ def make_new_data(__input_images, __path, __grid_size, __csv_filename):
 
 
 if __name__ == "__main__":
-    # csv_file = "images/test_labels.csv"
     csv_file = sys.argv[1]
-    # images_path = "images/test/"
     images_path = sys.argv[2]
-    # new_images_path = "new_images"
     new_images_path = sys.argv[3]
-    # grid_size = 80
     grid_size = int(sys.argv[4])
     _, csv_filename = os.path.split(csv_file)
     if not os.path.exists(new_images_path):
