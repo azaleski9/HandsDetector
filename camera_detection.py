@@ -1,4 +1,8 @@
+from __future__ import absolute_import, division, print_function
+
+import tensorflow as tf
 import cv2 as cv2
+import numpy as np
 
 
 class FrameFragment:
@@ -50,6 +54,7 @@ def split_image(image, __grid_size):
 
 
 if __name__ == "__main__":
+    model = tf.keras.models.load_model('hand_model.h5')
     grid_size = 96
     cap = cv2.VideoCapture(0)
     if cap.isOpened():
@@ -57,10 +62,25 @@ if __name__ == "__main__":
         while True:
             ret, frame = cap.read()
             frame = cv2.resize(frame, (width, height))
-            print(frame.shape)
             crops = split_image(frame, grid_size)
+            images = []
             for crop in crops:
-                cv2.rectangle(frame, (crop.x, crop.y), (crop.x + crop.width, crop.y + crop.height), (0, 255, 0), 1)
+                img = crop.image
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+                # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                img = tf.cast(img, tf.float32)
+                img = (img / 127.5) - 1
+                #  img = tf.reshape(img, [-1, grid_size, grid_size, 3])
+                images.append(img)
+
+            print(images[0].shape)
+            images = tf.convert_to_tensor(images, np.float32)
+            print(images.shape)
+            predictions = model.predict(images)
+            for i in range(len(predictions)):
+                if predictions[i][0] < predictions[i][1]:
+                    cv2.rectangle(frame, (crops[i].x, crops[i].y),
+                                  (crops[i].x + crops[i].width, crops[i].y + crops[i].height), (0, 255, 0), 1)
             cv2.imshow('image', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

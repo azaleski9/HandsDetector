@@ -23,6 +23,7 @@ IMG_SIZE = 96
 # Reizing imgages
 def format_example(image, label):
     image = tf.cast(image, tf.float32)
+    image = tf.image.rgb_to_grayscale(image)
     image = (image/127.5) - 1
     #image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
 
@@ -69,7 +70,7 @@ if __name__ == "__main__":
 
     # Own simple model - experimental - isn't used now
     model = keras.models.Sequential()
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 3)))
+    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 1)))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
