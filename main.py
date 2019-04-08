@@ -67,21 +67,6 @@ if __name__ == "__main__":
 
     IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
 
-    # Create the base model from the pre-trained model MobileNet V2
-    base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
-                                                   include_top=False,
-                                                   weights='imagenet')
-
-    feature_batch = base_model(image_batch)
-    print(feature_batch.shape)
-    base_model.trainable = True
-
-    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-    feature_batch_average = global_average_layer(feature_batch)
-
-    prediction_layer = keras.layers.Dense(1)
-    prediction_batch = prediction_layer(feature_batch_average)
-
     # Own simple model - experimental - isn't used now
     model = keras.models.Sequential()
     model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 3)))
@@ -91,35 +76,12 @@ if __name__ == "__main__":
     model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dense(64, activation='relu'))
-    model.add(keras.layers.Dense(10, activation='softmax'))
-
-    # Premade model from Tensorflow docs
-    model = tf.keras.Sequential([
-        base_model,
-        global_average_layer,
-        prediction_layer
-    ])
-
-    # Let's take a look to see how many layers are in the base model
-    print("Number of layers in the base model: ", len(base_model.layers))
-
-    # Fine tune from this layer onwards
-    fine_tune_at = 100
-
-    # Freeze all the layers before the `fine_tune_at` layer
-    for layer in base_model.layers[:fine_tune_at]:
-        layer.trainable = False
+    model.add(keras.layers.Dense(2, activation='softmax'))
 
     base_learning_rate = 0.0001
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=base_learning_rate/10),
-                  loss='binary_crossentropy',
+    model.compile(optimizer='adam',
+                  loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
-
-    #training
-   # num_train, num_val, num_test = (
-    #    metadata.splits['train'].num_examples * weight / 10
-     #   for weight in SPLIT_WEIGHTS
-    #)
 
     initial_epochs = 4
     steps_per_epoch = int(train_size/BATCH_SIZE)
@@ -145,12 +107,6 @@ if __name__ == "__main__":
                                   verbose=1, steps_per_epoch=steps_per_epoch,
                                   validation_data=validation_batches.repeat(),
                                   validation_steps=validation_steps, callbacks=[cp_callback, tb_callBack])
-
-   # history = model.fit(train_batches.repeat(),
-    #                    epochs=initial_epochs,
-     #                   steps_per_epoch=steps_per_epoch,
-      #                  validation_data=validation_batches.repeat(),
-       #                 validation_steps=validation_steps, callbacks=[cp_callback, tb_callBack])
 
     model.save('hand_model.h5')
 
