@@ -4,7 +4,7 @@ import tensorflow as tf
 import os
 
 
-#TFRecords parser
+# TFRecords parser
 def _parse_function(example_proto):
     features = tf.io.parse_single_example(
         example_proto,
@@ -12,7 +12,7 @@ def _parse_function(example_proto):
             'image/encoded': tf.io.FixedLenFeature([], tf.string),
             'image/object/class/label': tf.io.FixedLenFeature([], tf.int64)
         })
-    #image = tf.io.decode_raw(features['image/encoded'], tf.float32)
+    # image = tf.io.decode_raw(features['image/encoded'], tf.float32)
     image = tf.image.decode_jpeg(features['image/encoded'], channels=3)
     label = tf.cast(features['image/object/class/label'], tf.int64)
     return image, label
@@ -20,11 +20,12 @@ def _parse_function(example_proto):
 
 IMG_SIZE = 96
 
+
 # Reizing imgages
 def format_example(image, label):
     image = tf.cast(image, tf.float32)
-    image = (image/127.5) - 1
-    #image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
+    image = (image / 127.5) - 1
+    # image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
 
     return image, label
 
@@ -32,9 +33,9 @@ def format_example(image, label):
 if __name__ == "__main__":
 
     keras = tf.keras
-
-   # keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=0,
-    #                            write_graph=True, write_images=True)
+    log_dir = os.path.join(".", "log")
+    # keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0,
+    #                          write_graph=True, write_images=True)
 
     raw_dataset = tf.data.TFRecordDataset(["train.record"]).repeat()
     parsed_dataset = raw_dataset.map(_parse_function)
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     # Own simple model - experimental - isn't used now
     model = keras.models.Sequential()
     model.add(keras.layers.Conv2D(32, (3, 3), input_shape=(IMG_SIZE, IMG_SIZE, 3),
-                     activation='relu'))
+                                  activation='relu'))
     model.add(keras.layers.Dropout(0.2))
     model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
@@ -85,8 +86,8 @@ if __name__ == "__main__":
                   metrics=['accuracy'])
 
     initial_epochs = 10
-    steps_per_epoch = int(train_size/BATCH_SIZE)
-    validation_steps = int(val_size/BATCH_SIZE)
+    steps_per_epoch = int(train_size / BATCH_SIZE)
+    validation_steps = int(val_size / BATCH_SIZE)
 
     checkpoint_path = "training_1/cp.ckpt"
     checkpoint_dir = os.path.dirname(checkpoint_path)
@@ -96,10 +97,10 @@ if __name__ == "__main__":
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    tb_callBack = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=1, write_graph=True, write_images=True,
+    tb_callBack = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, write_graph=True, write_images=True,
                                               update_freq=50)
 
-    #model = keras.models.load_model('hand_model.h5')
+    # model = keras.models.load_model('hand_model.h5')
 
     # Training
     history = model.fit_generator(train_batches.repeat(),
@@ -113,6 +114,3 @@ if __name__ == "__main__":
 
     # Validating testing
     loss1, accuracy1 = model.evaluate(validation_batches, steps=validation_steps)
-
-
-
