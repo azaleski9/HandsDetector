@@ -23,7 +23,6 @@ IMG_SIZE = 96
 # Reizing imgages
 def format_example(image, label):
     image = tf.cast(image, tf.float32)
-    image = tf.image.rgb_to_grayscale(image)
     image = (image/127.5) - 1
     #image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
 
@@ -56,7 +55,7 @@ if __name__ == "__main__":
     validation = raw_validation.map(format_example)
     test = raw_test.map(format_example)
 
-    BATCH_SIZE = 64
+    BATCH_SIZE = 32
     SHUFFLE_BUFFER_SIZE = 1000
 
     train_batches = train.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
@@ -70,21 +69,22 @@ if __name__ == "__main__":
 
     # Own simple model - experimental - isn't used now
     model = keras.models.Sequential()
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 1)))
-    model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
-    model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(keras.layers.Conv2D(32, (3, 3), input_shape=(IMG_SIZE, IMG_SIZE, 3),
+                     activation='relu'))
+    model.add(keras.layers.Dropout(0.2))
+    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
+    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(64, activation='relu'))
-    model.add(keras.layers.Dense(2, activation='softmax'))
+    model.add(keras.layers.Dense(256, activation='relu'))
+    model.add(keras.layers.Dropout(0.3))
+    model.add(keras.layers.Dense(1, activation='sigmoid'))
 
     base_learning_rate = 0.0001
     model.compile(optimizer='adam',
-                  loss='sparse_categorical_crossentropy',
+                  loss='binary_crossentropy',
                   metrics=['accuracy'])
 
-    initial_epochs = 4
+    initial_epochs = 10
     steps_per_epoch = int(train_size/BATCH_SIZE)
     validation_steps = int(val_size/BATCH_SIZE)
 
