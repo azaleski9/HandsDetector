@@ -54,7 +54,7 @@ def split_image(image, __grid_size):
 
 
 if __name__ == "__main__":
-    model = tf.keras.models.load_model('hand_model.h5')
+    model = tf.keras.models.load_model('hand_model_gerard.h5')
     grid_size = 96
     cap = cv2.VideoCapture(0)
     if cap.isOpened():
@@ -66,8 +66,8 @@ if __name__ == "__main__":
             images = []
             for crop in crops:
                 img = crop.image
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-                # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                #img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 img = tf.cast(img, tf.float32)
                 img = (img / 127.5) - 1
                 #  img = tf.reshape(img, [-1, grid_size, grid_size, 3])
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             print(images.shape)
             predictions = model.predict(images)
             for i in range(len(predictions)):
-                if predictions[i][0] < predictions[i][1]:
+                if predictions[i][0] > 0.8:
                     cv2.rectangle(frame, (crops[i].x, crops[i].y),
                                   (crops[i].x + crops[i].width, crops[i].y + crops[i].height), (0, 255, 0), 1)
             cv2.imshow('image', frame)
