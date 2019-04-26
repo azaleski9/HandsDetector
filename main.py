@@ -24,7 +24,7 @@ IMG_SIZE = 96
 # Reizing imgages
 def format_example(image, label):
     image = tf.cast(image, tf.float32)
-    image = (image / 127.5) - 1
+    image = (image / 255)
     # image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
 
     return image, label
@@ -32,6 +32,7 @@ def format_example(image, label):
 
 if __name__ == "__main__":
 
+    SHUFFLE_BUFFER_SIZE = 20000
     keras = tf.keras
     log_dir = os.path.join(".", "log")
     # keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0,
@@ -50,14 +51,13 @@ if __name__ == "__main__":
 
     raw_test = parsed_dataset_test
     raw_validation = parsed_dataset.take(val_size)
-    raw_train = parsed_dataset
+    raw_train = parsed_dataset.skip(val_size)
 
     train = raw_train.map(format_example)
     validation = raw_validation.map(format_example)
     test = raw_test.map(format_example)
 
-    BATCH_SIZE = 32
-    SHUFFLE_BUFFER_SIZE = 1000
+    BATCH_SIZE = 16
 
     train_batches = train.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
     validation_batches = validation.batch(BATCH_SIZE)
@@ -68,19 +68,22 @@ if __name__ == "__main__":
 
     IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
 
-    # Own simple model - experimental - isn't used now
+    # Own simple model
     model = keras.models.Sequential()
     model.add(keras.layers.Conv2D(32, (3, 3), input_shape=(IMG_SIZE, IMG_SIZE, 3),
                                   activation='relu'))
-    model.add(keras.layers.Dropout(0.2))
+    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(256, activation='relu'))
-    model.add(keras.layers.Dropout(0.3))
+    model.add(keras.layers.Dense(64, activation='relu'))
+    model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.Dense(1, activation='sigmoid'))
 
-    base_learning_rate = 0.0001
+    base_learning_rate = 0.0005
     model.compile(optimizer='adam',
                   loss='binary_crossentropy',
                   metrics=['accuracy'])
