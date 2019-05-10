@@ -73,13 +73,13 @@ if __name__ == "__main__":
     model.add(keras.layers.Conv2D(32, (3, 3), input_shape=(IMG_SIZE, IMG_SIZE, 3),
                                   activation='relu'))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
+    model.add(keras.layers.Conv2D(64, (2, 2), activation='relu'))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+   # model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+   # model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(64, activation='relu'))
+    model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.Dense(1, activation='sigmoid'))
 
