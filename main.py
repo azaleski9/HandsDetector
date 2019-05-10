@@ -57,7 +57,7 @@ if __name__ == "__main__":
     validation = raw_validation.map(format_example)
     test = raw_test.map(format_example)
 
-    BATCH_SIZE = 16
+    BATCH_SIZE = 8
 
     train_batches = train.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
     validation_batches = validation.batch(BATCH_SIZE)
