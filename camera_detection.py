@@ -6,7 +6,7 @@ import numpy as np
 
 alpha_slider_max = 100
 title_window = 'Camera hand detection example'
-prob_threshold = 0.5
+prob_threshold = 0.8
 
 
 class FrameFragment:
@@ -63,7 +63,7 @@ def on_trackbar(val):
 
 if __name__ == "__main__":
     model = tf.keras.models.load_model('hand_model.h5')
-    grid_size = 96
+    grid_size = 200
     cap = cv2.VideoCapture(0)
     if cap.isOpened():
         height, width = get_proper_resolution(cap.get(4), cap.get(3), grid_size)
@@ -87,7 +87,7 @@ if __name__ == "__main__":
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 img = tf.cast(img, tf.float32)
                 img = (img / 255)
-               # img = tf.image.resize(img, (96, 96))
+                img = tf.image.resize(img, (96, 96))
                 #  img = tf.reshape(img, [-1, grid_size, grid_size, 3])
                 images.append(img)
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
             cv2.imshow(title_window, frame)
             trackbar_name = 'Probability threshold x %d' % alpha_slider_max
-            cv2.createTrackbar(trackbar_name, title_window, 0, alpha_slider_max, on_trackbar)
+            cv2.createTrackbar(trackbar_name, title_window, int(prob_threshold*100), alpha_slider_max, on_trackbar)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         cap.release()
